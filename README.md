@@ -3,7 +3,7 @@
  <img width=200px height=200px src="https://testing-library.com/img/octopus-64x64.png" alt="Project logo" /></a>
 </p>
 
-<h3 align="center">React testing librarys</h3>
+<h3 align="center">React testing library</h3>
 
 ---
 
