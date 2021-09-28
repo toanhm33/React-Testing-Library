@@ -41,7 +41,7 @@ React testing library cung cấp cho bạn một số phương thức để tìm
 - getByLabelText(): bởi label giá trị thuộc tính của nó
 - getByPlaceholderText(): bởi placeholder giá trị thuộc tính của nó
 - getByAltText(): bởi alt giá trị thuộc tính của nó
-- getByDisplayValue(): theo value thuộc tính của nó , thường dành cho <input>các phần tử
+- getByDisplayValue(): theo value thuộc tính của nó , thường dành cho các phần tử <input>
 - getByTitle(): bởi title giá trị thuộc tính của nó
 ```
 Và khi các phương thức này không đủ, bạn có thể sử dụng getByTestId() phương thức cho phép bạn tìm một phần tử theo data-testid thuộc tính của nó :
@@ -56,7 +56,7 @@ const element = screen.getByTestId('custom-element');
 ## Giới thiệu một số loại kiểm tra <a name = "use"></a>
 Chúng ta phải gọi afterEach(cleanup) để dọn dẹp sau mỗi lần thực hiện test, nếu không test này sẽ gây side-effect lên test kia.
 ## 1. Kiểm tra các phần tử DOM
-Để kiểm tra các phần tử DOM của chúng tôi, trước tiên chúng ta phải xem file ```TestElements.js```
+Để kiểm tra các phần tử DOM, trước tiên chúng ta phải xem file ```TestElements.js```
 
 ```
 import React from 'react'
@@ -76,7 +76,8 @@ const TestElements = () => {
 export default TestElements
 ```
 Kiểm tra nếu bộ đếm bằng 0:
-``` TestElements.test.js ```
+
+```TestElements.test.js ```
 
 ```
 import React from 'react';
@@ -100,9 +101,12 @@ it('should be enabled', () => {
     expect(getByTestId('button-down')).toBeDisabled()
   });
 ```
-Chúng ta kiểm tra xem nội dung văn bản 
+Chúng ta kiểm tra xem nội dung văn bản
+
 ```<h1 data-testid="counter">{ counter }</h1>```
-có bằng 0 hay không bằng cách sử dụng getByTestIdđể chọn các yếu tố cần thiết.
+
+có bằng 0 hay không bằng cách sử dụng getByTestId để chọn các yếu tố cần thiết.
+
 Kiểm tra xem các nút được bật hay tắt bằng cách thêm đoạn mã sau vào tệp:
 ```
   it('should be enabled', () => {
