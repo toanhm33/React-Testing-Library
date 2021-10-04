@@ -54,9 +54,13 @@ const element = screen.getByTestId('custom-element');
 ```
 
 ## Giới thiệu một số loại kiểm tra <a name = "use"></a>
-Chúng ta phải gọi afterEach(cleanup) để dọn dẹp sau mỗi lần thực hiện test, nếu không test này sẽ gây side-effect lên test kia.
+
+Để tạo 1 kịch bản test trước hết chúng ta cần import 2 phương thức ```render``` và ```cleanup```
+
+```render``` giúp hiển thị react component và ```cleanup``` để dọn dẹp sau mỗi lần thực hiện test, nếu không test này sẽ gây side-effect lên test kia.
+
 ## 1. Kiểm tra các phần tử DOM
-Để kiểm tra các phần tử DOM, trước tiên chúng ta phải xem file ```TestElements.js```
+Để kiểm tra các phần tử DOM, trước tiên chúng ta xem file ```TestElements.js```
 
 ```
 import React from 'react'
@@ -91,15 +95,6 @@ it('should equal to 0', () => {
     const { getByTestId } = render(<TestElements />); 
     expect(getByTestId('counter')).toHaveTextContent(0)
 });
-it('should be enabled', () => {
-    const { getByTestId } = render(<TestElements />);
-    expect(getByTestId('button-up')).not.toHaveAttribute('disabled')
-  });
-
-  it('should be disabled', () => {
-    const { getByTestId } = render(<TestElements />); 
-    expect(getByTestId('button-down')).toBeDisabled()
-  });
 ```
 Chúng ta kiểm tra xem nội dung văn bản
 
@@ -223,9 +218,201 @@ afterEach(cleanup);
 Tiếp theo, chúng ta sử dụng một phương pháp getByText(). Điều này tương tự như getByTestId(), ngoại trừ việc getByText() chọn nội dung văn bản thay vì id hoặc dữ liệu-chứng thực.
 Bây giờ, sau khi nhấp vào nút, chúng ta chờ bộ đếm được tăng dần với waitForElement(() => getByText('1')). Và khi bộ đếm tăng lên 1, bây giờ chúng ta có thể chuyển sang điều kiện và kiểm tra xem bộ đếm có hiệu quả bằng 1 hay không.
 
+## 4. Kiểm tra React Redux
+Chúng ta kiểm tra file ```TestRedux.js```
+
+```
+import React from 'react'
+import { connect } from 'react-redux'
+
+const TestRedux = ({counter, dispatch}) => {
+
+ const increment = () => dispatch({ type: 'INCREMENT' })
+ const decrement = () => dispatch({ type: 'DECREMENT' })
+  
+ return (
+  <>
+    <h1 data-testid="counter">{ counter }</h1>
+    <button data-testid="button-up" onClick={increment}>Up</button>
+    <button data-testid="button-down" onClick={decrement}>Down</button>
+ </>
+    )
+  }
+  
+export default connect(state => ({ counter: state.count }))(TestRedux)
+```
+Và file reducer:
+```store/reducer.js```
+```
+export const initialState = {
+    count: 0,
+  }
+  
+  export function reducer(state = initialState, action) {
+    switch (action.type) {
+      case 'INCREMENT':
+        return {
+          count: state.count + 1,
+        }
+      case 'DECREMENT':
+        return {
+          count: state.count - 1,
+        }
+      default:
+        return state
+    }
+  }
+```
+Ta thực hiện viết unit tests.
+* Kiểm tra nếu trạng thái ban đầu bằng 0:
+
+```TestRedux.test.js```
+
+```
+import React from 'react'
+import { createStore } from 'redux'
+import { Provider } from 'react-redux'
+import { render, cleanup, fireEvent } from '@testing-library/react';
+import { initialState, reducer } from '../store/reducer'
+import TestRedux from './TestRedux'
+
+const renderWithRedux = (
+  component,
+  { initialState, store = createStore(reducer, initialState) } = {}
+) => {
+  return {
+    ...render(<Provider store={store}>{component}</Provider>),
+    store,
+  }
+}
+
+ afterEach(cleanup);
+
+it('checks initial state is equal to 0', () => {
+    const { getByTestId } = renderWithRedux(<TestRedux />)
+    expect(getByTestId('counter')).toHaveTextContent('0')
+  })
+```
+
+Tại đây ta sử dụng renderWithRedux(), nó nhận vào component để render, giá trị khởi tạo của state, và store. Nếu không có store nó sẽ tạo mới một store, và nếu không nhận một giá trị state khởi tạo hoặc một store nó sẽ trả về một object rỗng.
+
+Tiếp theo chúng ta sử dụng ```render()``` để render component và truyền store vào Provider.
+
+Bây giờ chúng ta có thể chuyển thành phần ```TestRedux``` vào ```renderWithRedux()``` để kiểm tra xem bộ đếm có bằng 0 hay không.
+
+* Kiểm tra bộ đếm tăng giảm có chính xác không:
+
+```TestRedux.test.js```
+
+```
+it('increments the counter through redux', () => {
+  const { getByTestId } = renderWithRedux(<TestRedux />, 
+    {initialState: {count: 5}
+})
+  fireEvent.click(getByTestId('button-up'))
+  expect(getByTestId('counter')).toHaveTextContent('6')
+})
+
+it('decrements the counter through redux', () => {
+  const { getByTestId} = renderWithRedux(<TestRedux />, {
+    initialState: { count: 100 },
+  })
+  fireEvent.click(getByTestId('button-down'))
+  expect(getByTestId('counter')).toHaveTextContent('99')
+})
+```
+
+Để test sự kiện tăng giảm chúng ta truyền một giá trị khởi tạo state đến ```renderWithRedux()```
+
+## 5. Kiểm tra React Context
+Chúng ta kiểm tra file ```TextContext.js```
+```
+import React from "react"
+
+export const CounterContext = React.createContext()
+
+const CounterProvider = () => {
+  const [counter, setCounter] = React.useState(0)
+  const increment = () => setCounter(counter + 1)
+  const decrement = () => setCounter(counter - 1)
+
+  return (
+    <CounterContext.Provider value={{ counter, increment, decrement }}>
+      <Counter />
+    </CounterContext.Provider>
+  )
+}
+
+export const Counter = () => {  
+    const { counter, increment, decrement } = React.useContext(CounterContext)   
+    return (
+     <>
+       <h1 data-testid="counter">{ counter }</h1>
+       <button data-testid="button-up" onClick={increment}> Up</button>
+       <button data-testid="button-down" onClick={decrement}>Down</button>
+    </>
+       )
+}
+
+export default CounterProvider
+```
+
+* Chúng ta thực hiện kiểm tra trạng thái ban đầu bằng 0 hay không:
+
+```
+import React from 'react'
+import { render, cleanup,  fireEvent } from '@testing-library/react'
+import CounterProvider, { CounterContext, Counter } from './TestContext'
+
+const renderWithContext = (
+  component) => {
+  return {
+    ...render(
+        <CounterProvider value={CounterContext}>
+            {component}
+        </CounterProvider>)
+  }
+}
+
+afterEach(cleanup);
+
+it('checks if initial state is equal to 0', () => {
+    const { getByTestId } = renderWithContext(<Counter />)
+    expect(getByTestId('counter')).toHaveTextContent('0')
+})
+```
+
+Chúng ta sử dụng hàm ```renderWithContext()``` để render component.
+Tại đây nó nhận component như một tham số. Và để tạo mới một context chúng ta truyền ```CounterContext``` vào Provider.
+Bây giờ, chúng ta có thể kiểm tra xem ban đầu bộ đếm có bằng 0 hay không.
+
+* Kiểm tra xem bộ đếm tăng và giảm một cách chính xác hay không:
+
+```TextContext.test.js```
+```
+  it('increments the counter', () => {
+    const { getByTestId } = renderWithContext(<Counter />)
+
+    fireEvent.click(getByTestId('button-up'))
+    expect(getByTestId('counter')).toHaveTextContent('1')
+  })
+
+  it('decrements the counter', () => {
+    const { getByTestId} = renderWithContext(<Counter />)
+
+    fireEvent.click(getByTestId('button-down'))
+    expect(getByTestId('counter')).toHaveTextContent('-1')
+  })
+```
+
+Ở đây chúng ta đã sử dụng sự kiện click chuột để kiểm tra bộ đếm có tăng chính xác thêm 1 và giảm -1
+
 ### Tổng kết <a name = "Tổng_Kết"></a>
 
+React testing Library là một thư viện hữu ích trong việc thử nghiệm Ứng dụng React. Nó cung cấp cho chúng ta quyền truy cập vào các trình đối sánh jest-dom mà chúng ta có thể sử dụng để kiểm tra các thành phần của mình hiệu quả hơn
+
 ## ✍️ Authors <a name = "authors"></a>
+
 
 
 
