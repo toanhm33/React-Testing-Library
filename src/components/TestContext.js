@@ -18,9 +18,10 @@ export const Counter = () => {
     const { counter, increment, decrement } = React.useContext(CounterContext)   
     return (
      <>
-       <h1 data-testid="counter">{ counter }</h1>
-       <button data-testid="button-up" onClick={increment}> Up</button>
-       <button data-testid="button-down" onClick={decrement}>Down</button>
+      <h1>Test context</h1>
+      <h1 data-testid="counter">{ counter }</h1>
+      <button data-testid="button-up" onClick={increment}> Up</button>
+      <button data-testid="button-down" onClick={decrement}>Down</button>
     </>
        )
 }
