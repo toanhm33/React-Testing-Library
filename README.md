@@ -412,7 +412,7 @@ Bây giờ, chúng ta có thể kiểm tra xem ban đầu bộ đếm có bằng
 
 React testing Library là một thư viện hữu ích trong việc thử nghiệm Ứng dụng React. Nó cung cấp cho chúng ta quyền truy cập vào các trình đối sánh jest-dom mà chúng ta có thể sử dụng để kiểm tra các thành phần của mình hiệu quả hơn
 
-## ✍️ Tài liệu tham khảo <a name = "refer"></a>
+## Tài liệu tham khảo <a name = "refer"></a>
 * https://testing-library.com/docs/react-testing-library/intro/
 
 
